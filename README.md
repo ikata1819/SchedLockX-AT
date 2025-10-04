@@ -136,6 +136,20 @@ The simulator offers real-time Gantt chart generation, process management, and i
 
 ---
 
+## Preview of SchedLockX-AT
+### Homepage
+<img width="1919" height="865" alt="Homepage" src="https://github.com/user-attachments/assets/3dfc4bba-de80-4127-a3e6-ad8b96cd5d30" />
+
+### CPU Scheduling
+<img width="1919" height="864" alt="image" src="https://github.com/user-attachments/assets/c1ba92eb-7277-43b0-9ef5-014ff6201f7e" />
+
+### Deadlock Detection (Banker's Algorithm)
+
+<img width="1919" height="866" alt="image" src="https://github.com/user-attachments/assets/e96ab64b-1fc8-4338-8157-f79df081a106" />
+
+
+
+
 ## 🛠️ Technical Implementation
 
 ### Architecture
