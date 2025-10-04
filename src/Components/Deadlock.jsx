@@ -9,6 +9,7 @@ const DeadlockDetection = () => {
   const [allocation, setAllocation] = useState([]);
   const [max, setMax] = useState([]);
   const [processes, setProcesses] = useState([]);
+  const [editingProcessId, setEditingProcessId] = useState(null);
 
   const handleResourceCountChange = (e) => {
     const count = parseInt(e.target.value) || 0;
@@ -57,15 +58,49 @@ const DeadlockDetection = () => {
       return;
     }
 
-    const newProcess = {
-      id: Date.now(),
-      name: processName,
-      allocation: [...allocation],
-      max: [...max],
-      need: calculateNeed(allocation, max),
-    };
+    if (editingProcessId) {
+      // Update existing process
+      setProcesses(processes.map(p => 
+        p.id === editingProcessId 
+          ? {
+              ...p,
+              name: processName,
+              allocation: [...allocation],
+              max: [...max],
+              need: calculateNeed(allocation, max),
+            }
+          : p
+      ));
+      setEditingProcessId(null);
+    } else {
+      // Add new process
+      const newProcess = {
+        id: Date.now(),
+        name: processName,
+        allocation: [...allocation],
+        max: [...max],
+        need: calculateNeed(allocation, max),
+      };
+      setProcesses([...processes, newProcess]);
+    }
 
-    setProcesses([...processes, newProcess]);
+    // Reset form
+    setProcessName("");
+    setAllocation(Array(resourceCount).fill(0));
+    setMax(Array(resourceCount).fill(0));
+  };
+
+  const handleEditProcess = (process) => {
+    setProcessName(process.name);
+    setAllocation([...process.allocation]);
+    setMax([...process.max]);
+    setEditingProcessId(process.id);
+    // Scroll to top of left panel
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProcessId(null);
     setProcessName("");
     setAllocation(Array(resourceCount).fill(0));
     setMax(Array(resourceCount).fill(0));
@@ -73,10 +108,13 @@ const DeadlockDetection = () => {
 
   const removeProcess = (id) => {
     setProcesses(processes.filter((p) => p.id !== id));
+    if (editingProcessId === id) {
+      handleCancelEdit();
+    }
   };
 
   return (
-    <div className="h-screen  flex flex-col ">
+    <div className="h-screen flex flex-col">
       {/* Top section with two panels side by side */}
       <div className="flex flex-1 bg-purple-300">
         {/* Left Panel - Input */}
@@ -152,10 +190,20 @@ const DeadlockDetection = () => {
 
             {/* Process Input */}
             {resourceCount > 0 && (
-              <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
-                <h3 className="font-semibold mb-3 text-yellow-700">
-                  Add Process
-                </h3>
+              <div className="mb-6 p-4 bg-yellow-50 rounded-lg border-2 border-yellow-300">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-yellow-700">
+                    {editingProcessId ? "Edit Process" : "Add Process"}
+                  </h3>
+                  {editingProcessId && (
+                    <button
+                      onClick={handleCancelEdit}
+                      className="text-sm bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition-colors"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
 
                 <div className="mb-4">
                   <label className="block font-medium mb-2 text-yellow-600">
@@ -250,9 +298,13 @@ const DeadlockDetection = () => {
 
                 <button
                   onClick={handleSubmit}
-                  className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                  className={`w-full ${
+                    editingProcessId 
+                      ? 'bg-blue-600 hover:bg-blue-700' 
+                      : 'bg-yellow-600 hover:bg-yellow-700'
+                  } text-white py-2 px-4 rounded-lg transition-colors font-medium`}
                 >
-                  Add Process
+                  {editingProcessId ? "Update Process" : "Add Process"}
                 </button>
               </div>
             )}
@@ -277,14 +329,24 @@ const DeadlockDetection = () => {
                         <th className="px-4 py-3 text-center">Allocation</th>
                         <th className="px-4 py-3 text-center">Max</th>
                         <th className="px-4 py-3 text-center">Need</th>
-                        <th className="px-4 py-3 text-center">Action</th>
+                        <th className="px-4 py-3 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {processes.map((process) => (
-                        <tr key={process.id} className="hover:bg-gray-50">
+                        <tr 
+                          key={process.id} 
+                          className={`hover:bg-gray-50 ${
+                            editingProcessId === process.id ? 'bg-blue-50' : ''
+                          }`}
+                        >
                           <td className="px-4 py-3 font-medium text-gray-900">
                             {process.name}
+                            {editingProcessId === process.id && (
+                              <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                                Editing
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex justify-center space-x-1">
@@ -323,12 +385,20 @@ const DeadlockDetection = () => {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <button
-                              onClick={() => removeProcess(process.id)}
-                              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm"
-                            >
-                              Remove
-                            </button>
+                            <div className="flex justify-center space-x-2">
+                              <button
+                                onClick={() => handleEditProcess(process)}
+                                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => removeProcess(process.id)}
+                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm"
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -401,10 +471,9 @@ const DeadlockDetection = () => {
         </div>
       </div>
       <div className="w-full p-6 bg-sky-100 border-t border-gray-300 flex justify-center items-center">
-        {/* Replace with your actual Bankers component */}
         <div className="w-full">
           <h2 className="text-xl font-bold text-center text-blue-800 mb-4">
-            Banker’s Algorithm
+            Banker's Algorithm
           </h2>
           {
             <Bankers
@@ -418,4 +487,5 @@ const DeadlockDetection = () => {
     </div>
   );
 };
+
 export default DeadlockDetection;

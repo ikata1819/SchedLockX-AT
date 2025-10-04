@@ -158,6 +158,13 @@ const Bankers = ({ processes, available, resourceTypes }) => {
     const newRequest = [...requestVector];
     newRequest[index] = parseInt(value) || 0;
     setRequestVector(newRequest);
+    // Clear results when request vector changes
+    if (result) {
+      setResult(null);
+      setSafeSequence([]);
+      setStep([]);
+      setWarnings([]);
+    }
   };
 
   const resetAlgorithm = () => {
@@ -221,7 +228,15 @@ const Bankers = ({ processes, available, resourceTypes }) => {
               <label className="block font-medium mb-2 text-green-600">Select Process</label>
               <select
                 value={selectedProcess}
-                onChange={(e) => setSelectedProcess(e.target.value)}
+                onChange={(e) => {
+                  setSelectedProcess(e.target.value);
+                  // Clear request vector and results when process changes
+                  setRequestVector(Array(available.length).fill(0));
+                  setResult(null);
+                  setSafeSequence([]);
+                  setStep([]);
+                  setWarnings([]);
+                }}
                 className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               >
                 <option value="">Choose a process...</option>
